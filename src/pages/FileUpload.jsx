@@ -1,131 +1,223 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const FileUpload = ({ setGraphData, setFraudRings, setSummary }) => {
-  const [fileName, setFileName] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function UploadPage() {
+  const navigate = useNavigate();
+
   const [dragActive, setDragActive] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   const handleFile = (file) => {
     if (!file) return;
 
     if (!file.name.endsWith(".csv")) {
-      alert("Please upload a CSV file only");
+      alert("Upload a valid CSV file.");
       return;
     }
 
     setFileName(file.name);
-    uploadFile(file);
-  };
 
-  const uploadFile = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      setLoading(true);
-
-      const res = await axios.post(
-        "http://localhost:5000/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setGraphData(res.data.graph);
-      setFraudRings(res.data.fraud_rings);
-      setSummary(res.data.summary);
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed. Check backend.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else {
-      setDragActive(false);
-    }
+    // Simulate processing (replace with API later)
+    setTimeout(() => {
+      setUploadSuccess(true);
+    }, 800);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    e.stopPropagation();
     setDragActive(false);
-
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
+    handleFile(e.dataTransfer.files[0]);
   };
 
   return (
-    <div className="min-h-screen bg-black flex flex-col justify-center items-center px-4 text-white">
+    <div style={styles.page}>
+      <style>{globalStyles}</style>
 
-      {/* Main Heading */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center">
-        Money Muling Network
-      </h1>
+      <div style={styles.container}>
+        <div style={styles.badge}>● Advanced Financial Crime Detection</div>
 
-      {/* Upload Card */}
-      <div className="w-full max-w-md bg-gray-900 rounded-2xl shadow-2xl p-6">
-        
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Upload Transactions CSV
-        </h2>
+        <h1 style={styles.title}>
+          Detect Money Mule <span style={styles.highlight}>Networks</span>
+        </h1>
 
-        {/* Upload Box */}
+        <p style={styles.subtitle}>
+          Upload your transaction CSV to visualize fraud rings and suspicious accounts.
+        </p>
+
+        {/* Dropzone */}
         <div
-          className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300
-          ${
-            dragActive
-              ? "border-blue-500 bg-gray-800"
-              : "border-gray-600 hover:border-blue-400"
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
+          style={{
+            ...styles.dropzone,
+            ...(dragActive ? styles.dropzoneActive : {}),
+            ...(uploadSuccess ? styles.dropzoneDisabled : {})
+          }}
+          onDragOver={(e) => {
+            if (uploadSuccess) return;
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => !uploadSuccess && setDragActive(false)}
+          onDrop={(e) => {
+            if (uploadSuccess) return;
+            handleDrop(e);
+          }}
         >
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => handleFile(e.target.files[0])}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
+          <div style={styles.icon}>⬆</div>
+          <p style={{ margin: 5 }}>Drag & drop your CSV file here</p>
+          <span style={styles.small}>or click to browse</span>
 
-          <p className="text-gray-400">
-            Drag & Drop your CSV here
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            or click to browse
-          </p>
+          {/* Hidden input only when upload not done */}
+          {!uploadSuccess && (
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => handleFile(e.target.files[0])}
+              style={styles.hiddenInput}
+            />
+          )}
+
+          {!uploadSuccess && (
+            <button style={styles.primaryBtn}>Choose CSV File</button>
+          )}
+
+          {fileName && (
+            <div style={styles.fileName}>✔ {fileName}</div>
+          )}
         </div>
 
-        {/* File Name */}
-        {fileName && (
-          <div className="mt-4 text-sm text-center">
-            Selected: <span className="text-blue-400">{fileName}</span>
-          </div>
-        )}
+        {/* Success Section */}
+        {uploadSuccess && (
+          <div style={styles.successBox}>
+            <div style={styles.successIcon}>✔</div>
+            <h3>Upload Successful</h3>
+            <p style={{ color: "#94a3b8", fontSize: 14 }}>
+              Transactions processed. Network ready for analysis.
+            </p>
 
-        {/* Loading */}
-        {loading && (
-          <div className="mt-4 flex justify-center items-center gap-2 text-blue-400">
-            <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-            Processing transactions...
+            <button
+              style={styles.dashboardBtn}
+              onClick={() => navigate("/dashboard")}
+            >
+              Go to Dashboard →
+            </button>
           </div>
         )}
       </div>
     </div>
   );
+}
+
+/* ---------- Styles ---------- */
+
+const styles = {
+  page: {
+    minHeight: "100vh",
+    background:
+      "radial-gradient(circle at top, #0f172a 0%, #020617 60%, #000814 100%)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    fontFamily: "Inter, sans-serif",
+    color: "white",
+  },
+  container: {
+    maxWidth: 700,
+    width: "100%",
+    textAlign: "center",
+  },
+  badge: {
+    display: "inline-block",
+    padding: "6px 14px",
+    borderRadius: 20,
+    fontSize: 12,
+    background: "rgba(255,99,132,0.1)",
+    color: "#f87171",
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 42,
+    margin: 0,
+  },
+  highlight: {
+    background: "linear-gradient(90deg,#f97316,#fb923c)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+  },
+  subtitle: {
+    marginTop: 10,
+    color: "#94a3b8",
+  },
+  dropzone: {
+    marginTop: 40,
+    padding: 60,
+    borderRadius: 20,
+    border: "1px dashed #334155",
+    background: "rgba(15,23,42,0.7)",
+    position: "relative",
+    transition: "0.3s",
+  },
+  dropzoneActive: {
+    borderColor: "#3b82f6",
+    boxShadow: "0 0 40px rgba(59,130,246,0.3)",
+  },
+  dropzoneDisabled: {
+    pointerEvents: "none",
+    opacity: 0.5,
+    borderColor: "#22c55e",
+  },
+  hiddenInput: {
+    position: "absolute",
+    inset: 0,
+    opacity: 0,
+    cursor: "pointer",
+  },
+  icon: {
+    fontSize: 30,
+  },
+  small: {
+    fontSize: 13,
+    color: "#64748b",
+  },
+  primaryBtn: {
+    marginTop: 20,
+    padding: "12px 26px",
+    borderRadius: 10,
+    border: "none",
+    background: "linear-gradient(90deg,#2563eb,#3b82f6)",
+    color: "white",
+    cursor: "pointer",
+  },
+  fileName: {
+    marginTop: 15,
+    color: "#22c55e",
+  },
+  successBox: {
+    marginTop: 30,
+    padding: 25,
+    borderRadius: 16,
+    background: "rgba(34,197,94,0.08)",
+    border: "1px solid #22c55e",
+  },
+  successIcon: {
+    fontSize: 30,
+    color: "#22c55e",
+  },
+  dashboardBtn: {
+    marginTop: 15,
+    padding: "12px 28px",
+    borderRadius: 10,
+    border: "none",
+    background: "linear-gradient(90deg,#22c55e,#16a34a)",
+    color: "white",
+    fontWeight: 600,
+    cursor: "pointer",
+  },
 };
 
-export default FileUpload;
+const globalStyles = `
+button:hover {
+  transform: translateY(-2px);
+}
+`;
