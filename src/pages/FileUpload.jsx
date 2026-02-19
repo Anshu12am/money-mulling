@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function UploadPage() {
   const navigate = useNavigate();
@@ -8,21 +9,46 @@ export default function UploadPage() {
   const [fileName, setFileName] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  const handleFile = (file) => {
-    if (!file) return;
+ const handleFile = async (file) => {
+  if (!file) return;
 
-    if (!file.name.endsWith(".csv")) {
-      alert("Upload a valid CSV file.");
-      return;
-    }
+  if (!file.name.endsWith(".csv")) {
+    alert("Upload a valid CSV file.");
+    return;
+  }
 
-    setFileName(file.name);
+  setFileName(file.name);
 
-    // Simulate processing (replace with API later)
-    setTimeout(() => {
-      setUploadSuccess(true);
-    }, 800);
-  };
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Call Spring Boot API
+    const response = await axios.post(
+      "http://localhost:8080/api/analyze",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    console.log("API Response:", response.data);
+
+    // Save result if needed
+    localStorage.setItem(
+      "analysisData",
+      JSON.stringify(response.data)
+    );
+
+    setUploadSuccess(true);
+  } catch (error) {
+    console.error(error);
+    alert("File upload failed. Check backend.");
+  }
+};
+
 
   const handleDrop = (e) => {
     e.preventDefault();
