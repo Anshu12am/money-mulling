@@ -11,7 +11,8 @@ const Dashboard = () => {
     // Replace this URL with your backend endpoint
     const fetchData = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/api/dashboard");
+        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/dashboard`);
+
         setData(response.data);
       } catch (err) {
         console.error("Failed to fetch dashboard data:", err);
